@@ -6,6 +6,12 @@
 
 #IncludeRegexTransform: 
 
+/home/adminstd/gitpr/src/database.cpp
+database.h
+/home/adminstd/gitpr/src/database.h
+iostream
+-
+
 /home/adminstd/gitpr/src/database.h
 pqxx/pqxx
 -

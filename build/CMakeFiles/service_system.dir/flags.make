@@ -6,5 +6,5 @@ CXX_DEFINES = -DCROW_USE_BOOST -D_GLIBCXX_USE_CXX11_ABI=1
 
 CXX_INCLUDES = -I/home/adminstd/gitpr/src
 
-CXX_FLAGS =  -Wall -Wextra -std=gnu++17
+CXX_FLAGS =  -Wall -Wextra -O3 -DNDEBUG -std=gnu++17
 
