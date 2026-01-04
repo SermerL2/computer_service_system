@@ -30,9 +30,13 @@ jobs:
     
     - name: Setup Crow framework
       run: |
+        # Clone Crow framework since it's a nested repo without .gitmodules
+        if [ ! -d "Crow" ]; then
+          git clone https://github.com/CrowCpp/Crow.git Crow
+        fi
         # CMake expects Crow at ../Crow/include relative to build dir
         mkdir -p ../Crow/include
-        cp -r ${{ github.workspace }}/Crow/include/* ../Crow/include/
+        cp -r Crow/include/* ../Crow/include/
     
     - name: Configure and build
       run: |
