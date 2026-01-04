@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/adminstd/gitpr/src/database.h
+pqxx/pqxx
+-
+string
+-
+vector
+-
+memory
+-
+nlohmann/json.hpp
+-
+
+/home/adminstd/gitpr/src/main.cpp
+webserver.h
+/home/adminstd/gitpr/src/webserver.h
+iostream
+-
+
+/home/adminstd/gitpr/src/webserver.cpp
+webserver.h
+/home/adminstd/gitpr/src/webserver.h
+fstream
+-
+iostream
+-
+
+/home/adminstd/gitpr/src/webserver.h
+database.h
+/home/adminstd/gitpr/src/database.h
+crow.h
+-
+cfloat
+-
+string
+-
+memory
+-
+

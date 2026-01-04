@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система управления обслуживанием</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        header h1 {
+            text-align: center;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            list-style: none;
+            background-color: #34495e;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .nav-tabs li {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .nav-tabs a {
+            display: block;
+            padding: 15px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-tabs a:hover {
+            background-color: #3d566e;
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Система управления обслуживанием оборудования</h1>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="status" id="status"></div>
+        
+        <ul class="nav-tabs">
+            <li><a href="#dashboard" onclick="showTab('dashboard')">Главная</a></li>
+            <li><a href="#devices" onclick="showTab('devices')">Устройства</a></li>
+            <li><a href="#services" onclick="showTab('services')">Типы обслуживания</a></li>
+            <li><a href="#history" onclick="showTab('history')">История</a></li>
+            <li><a href="#new-service" onclick="showTab('new-service')">Новое обслуживание</a></li>
+        </ul>
+        
+        <div id="dashboard" class="tab-content active">
+            <h2>Статистика</h2>
+            <div class="stats">
+                <p>Подключение к базе данных: <span id="db-status">Проверка...</span></p>
+                <p>Количество устройств: <span id="device-count">0</span></p>
+                <p>Количество записей обслуживания: <span id="history-count">0</span></p>
+            </div>
+        </div>
+        
+        <div id="devices" class="tab-content">
+            <h2>Устройства</h2>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="loadDevices()">Обновить список</button>
+                <button class="btn btn-success" onclick="showDeviceForm()">Добавить устройство</button>
+            </div>
+            
+            <div id="device-form" style="display: none; margin-top: 20px;">
+                <h3>Добавить новое устройство</h3>
+                <form id="addDeviceForm">
+                    <div class="form-group">
+                        <label>Название:</label>
+                        <input type="text" id="device-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Модель:</label>
+                        <input type="text" id="device-model">
+                    </div>
+                    <div class="form-group">
+                        <label>Дата приобретения:</label>
+                        <input type="date" id="device-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Статус:</label>
+                        <select id="device-status">
+                            <option value="active">Активно</option>
+                            <option value="inactive">Неактивно</option>
+                            <option value="maintenance">На обслуживании</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Добавить</button>
+                    <button type="button" class="btn" onclick="hideDeviceForm()">Отмена</button>
+                </form>
+            </div>
+            
+            <table id="devices-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Модель</th>
+                        <th>Дата приобретения</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Данные будут загружены через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="services" class="tab-content">
+            <h2>Типы обслуживания</h2>
+            <button class="btn btn-primary" onclick="loadServiceTypes()">Обновить список</button>
+            
+            <table id="services-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Рекомендуемый интервал (мес.)</th>
+                        <th>Стандартная стоимость</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Данные будут загружены через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="history" class="tab-content">
+            <h2>История обслуживания</h2>
+            <button class="btn btn-primary" onclick="loadServiceHistory()">Обновить историю</button>
+            
+            <table id="history-table">
+                <thead>
+                    <tr>
+                        <th>ID записи</th>
+                        <th>Устройство</th>
+                        <th>Модель</th>
+                        <th>Тип обслуживания</th>
+                        <th>Дата</th>
+                        <th>Стоимость</th>
+                        <th>Следующее обслуживание</th>
+                        <th>Примечания</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Данные будут загружены через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="new-service" class="tab-content">
+            <h2>Добавить запись обслуживания</h2>
+            <form id="addServiceForm">
+                <div class="form-group">
+                    <label>Устройство:</label>
+                    <select id="service-device" required>
+                        <option value="">Выберите устройство</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Тип обслуживания:</label>
+                    <select id="service-type" required>
+                        <option value="">Выберите тип обслуживания</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Дата обслуживания:</label>
+                    <input type="date" id="service-date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Стоимость:</label>
+                    <input type="number" step="0.01" id="service-cost" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Дата следующего обслуживания:</label>
+                    <input type="date" id="service-next-date">
+                </div>
+                
+                <div class="form-group">
+                    <label>Примечания:</label>
+                    <textarea id="service-notes" rows="3"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-success">Добавить запись</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Глобальные переменные
+        let currentTab = 'dashboard';
+        
+        // Функции для работы с вкладками
+        function showTab(tabName) {
+            // Скрыть все вкладки
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Показать выбранную вкладку
+            document.getElementById(tabName).classList.add('active');
+            currentTab = tabName;
+            
+            // Загрузить данные для вкладки
+            switch(tabName) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'devices':
+                    loadDevices();
+                    break;
+                case 'services':
+                    loadServiceTypes();
+                    break;
+                case 'history':
+                    loadServiceHistory();
+                    break;
+                case 'new-service':
+                    loadDeviceAndServiceOptions();
+                    break;
+            }
+        }
+        
+        // Функции для работы с устройствами
+        function showDeviceForm() {
+            document.getElementById('device-form').style.display = 'block';
+        }
+        
+        function hideDeviceForm() {
+            document.getElementById('device-form').style.display = 'none';
+            document.getElementById('addDeviceForm').reset();
+        }
+        
+        // Загрузка данных с сервера
+        async function fetchData(url, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(url, options);
+                return await response.json();
+            } catch (error) {
+                showStatus('Ошибка соединения с сервером', 'error');
+                console.error('Error:', error);
+                return null;
+            }
+        }
+        
+        // Отображение статуса
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            
+            setTimeout(() => {
+                statusDiv.textContent = '';
+                statusDiv.className = 'status';
+            }, 5000);
+        }
+        
+        // Загрузка главной панели
+        async function loadDashboard() {
+            // Проверка подключения к БД
+            const dbTest = await fetchData('/api/test-db');
+            if (dbTest) {
+                document.getElementById('db-status').textContent = 
+                    dbTest.database_connected ? 'Подключено' : 'Не подключено';
+                document.getElementById('db-status').style.color = 
+                    dbTest.database_connected ? 'green' : 'red';
+            }
+            
+            // Загрузка устройств для подсчета
+            const devices = await fetchData('/api/devices');
+            if (devices) {
+                document.getElementById('device-count').textContent = devices.length;
+            }
+            
+            // Загрузка истории для подсчета
+            const history = await fetchData('/api/service-history');
+            if (history) {
+                document.getElementById('history-count').textContent = history.length;
+            }
+        }
+        
+        // Загрузка списка устройств
+        async function loadDevices() {
+            const devices = await fetchData('/api/devices');
+            if (!devices) return;
+            
+            const tbody = document.querySelector('#devices-table tbody');
+            tbody.innerHTML = '';
+            
+            devices.forEach(device => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${device.id}</td>
+                    <td>${device.name}</td>
+                    <td>${device.model || ''}</td>
+                    <td>${device.purchase_date || ''}</td>
+                    <td>${device.status}</td>
+                `;
+            });
+            
+            showStatus(`Загружено ${devices.length} устройств`);
+        }
+        
+        // Добавление нового устройства
+        document.getElementById('addDeviceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const deviceData = {
+                name: document.getElementById('device-name').value,
+                model: document.getElementById('device-model').value,
+                purchase_date: document.getElementById('device-date').value,
+                status: document.getElementById('device-status').value
+            };
+            
+            const result = await fetchData('/api/devices', 'POST', deviceData);
+            
+            if (result && result.success) {
+                showStatus('Устройство успешно добавлено');
+                hideDeviceForm();
+                loadDevices();
+                loadDeviceAndServiceOptions(); // Обновить опции в форме добавления обслуживания
+            } else {
+                showStatus('Ошибка при добавлении устройства', 'error');
+            }
+        });
+        
+        // Загрузка типов услуг
+        async function loadServiceTypes() {
+            const types = await fetchData('/api/service-types');
+            if (!types) return;
+            
+            const tbody = document.querySelector('#services-table tbody');
+            tbody.innerHTML = '';
+            
+            types.forEach(type => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${type.id}</td>
+                    <td>${type.name}</td>
+                    <td>${type.recommended_interval_months}</td>
+                    <td>${type.standard_cost.toFixed(2)}</td>
+                `;
+            });
+            
+            showStatus(`Загружено ${types.length} типов услуг`);
+        }
+        
+        // Загрузка истории обслуживания
+        async function loadServiceHistory() {
+            const history = await fetchData('/api/service-history');
+            if (!history) return;
+            
+            const tbody = document.querySelector('#history-table tbody');
+            tbody.innerHTML = '';
+            
+            history.forEach(record => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${record.record_id}</td>
+                    <td>${record.device_name}</td>
+                    <td>${record.model || ''}</td>
+                    <td>${record.service_name}</td>
+                    <td>${record.service_date}</td>
+                    <td>${record.cost ? record.cost.toFixed(2) : '0.00'}</td>
+                    <td>${record.next_due_date || ''}</td>
+                    <td>${record.notes || ''}</td>
+                `;
+            });
+            
+            showStatus(`Загружено ${history.length} записей обслуживания`);
+        }
+        
+        // Загрузка опций для форм
+        async function loadDeviceAndServiceOptions() {
+            // Загрузка устройств
+            const devices = await fetchData('/api/devices');
+            const deviceSelect = document.getElementById('service-device');
+            
+            if (devices) {
+                deviceSelect.innerHTML = '<option value="">Выберите устройство</option>';
+                devices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.id;
+                    option.textContent = `${device.name} (${device.model || 'без модели'})`;
+                    deviceSelect.appendChild(option);
+                });
+            }
+            
+            // Загрузка типов услуг
+            const services = await fetchData('/api/service-types');
+            const serviceSelect = document.getElementById('service-type');
+            
+            if (services) {
+                serviceSelect.innerHTML = '<option value="">Выберите тип обслуживания</option>';
+                services.forEach(service => {
+                    const option = document.createElement('option');
+                    option.value = service.id;
+                    option.textContent = `${service.name} (${service.standard_cost.toFixed(2)})`;
+                    serviceSelect.appendChild(option);
+                });
+            }
+        }
+        
+        // Добавление записи обслуживания
+        document.getElementById('addServiceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const serviceData = {
+                device_id: parseInt(document.getElementById('service-device').value),
+                service_id: parseInt(document.getElementById('service-type').value),
+                service_date: document.getElementById('service-date').value,
+                cost: parseFloat(document.getElementById('service-cost').value),
+                next_due_date: document.getElementById('service-next-date').value,
+                notes: document.getElementById('service-notes').value
+            };
+            
+            const result = await fetchData('/api/service-history', 'POST', serviceData);
+            
+            if (result && result.success) {
+                showStatus('Запись обслуживания успешно добавлена');
+                document.getElementById('addServiceForm').reset();
+                loadServiceHistory(); // Обновить историю
+            } else {
+                showStatus('Ошибка при добавлении записи', 'error');
+            }
+        });
+        
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+            loadDeviceAndServiceOptions();
+        });
+    </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 #pragma once
 #include "database.h"
 #include <crow.h>
+#include <cfloat>
 #include <string>
 #include <memory>
 

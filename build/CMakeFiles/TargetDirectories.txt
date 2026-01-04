@@ -1,0 +1,3 @@
+/home/adminstd/gitpr/build/CMakeFiles/rebuild_cache.dir
+/home/adminstd/gitpr/build/CMakeFiles/service_system.dir
+/home/adminstd/gitpr/build/CMakeFiles/edit_cache.dir

@@ -1,0 +1,4 @@
+/home/adminstd/gitpr/build_tests/CMakeFiles/rebuild_cache.dir
+/home/adminstd/gitpr/build_tests/CMakeFiles/edit_cache.dir
+/home/adminstd/gitpr/build_tests/CMakeFiles/test_simple.dir
+/home/adminstd/gitpr/build_tests/CMakeFiles/test.dir

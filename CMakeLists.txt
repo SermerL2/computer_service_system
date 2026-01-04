@@ -43,8 +43,13 @@ if(NOT CROW_INCLUDE_DIR)
     message(FATAL_ERROR "Crow not found! Please install Crow or place it in ../crow/Crow/include")
 endif()
 
-# nlohmann/json
-find_package(nlohmann_json 3.2.0 REQUIRED)
+# nlohmann/json (header-only, use find_path)
+find_path(NLOHMANN_JSON_INCLUDE_DIR nlohmann/json.hpp
+    PATHS
+    /usr/include
+    /usr/local/include
+    REQUIRED
+)
 
 # Исходные файлы
 set(SOURCES
@@ -62,6 +67,7 @@ target_include_directories(service_system PRIVATE
     ${CROW_INCLUDE_DIR}
     ${PQXX_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
+    ${NLOHMANN_JSON_INCLUDE_DIR}
 )
 
 # Для Crow нужно определить макрос CROW_USE_BOOST
@@ -74,6 +80,7 @@ target_compile_definitions(service_system PRIVATE
 target_link_libraries(service_system PRIVATE
     Threads::Threads
     ${PQXX_LIBRARY}
+    pq
     Boost::system
     Boost::thread
     Boost::random

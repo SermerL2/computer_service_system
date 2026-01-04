@@ -1,0 +1,15 @@
+{
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "dbname": "car_service_db",
+        "user": "postgres",
+        "password": "password"
+    },
+    "server": {
+        "port": 8080,
+        "threads": 4,
+        "static_files": "./www"
+    }
+}
+
