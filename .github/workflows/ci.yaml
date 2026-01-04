@@ -28,13 +28,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential cmake libboost-all-dev libpqxx-dev clang-format
     
-    - name: Setup Crow framework
-      run: |
-        # Create the expected Crow directory structure for CMake
-        mkdir -p ../crow/Crow/include
-        cp -r Crow/include/crow.h ../crow/Crow/include/
-        cp -r Crow/include/crow ../crow/Crow/include/
-    
     - name: Configure and build
       run: |
         mkdir -p build

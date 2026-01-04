@@ -32,12 +32,11 @@ find_package(Threads REQUIRED)
 # Находим Crow в системе или используем локальный
 find_path(CROW_INCLUDE_DIR crow.h
     PATHS
+    ${CMAKE_SOURCE_DIR}/Crow/include
     /usr/include
     /usr/local/include
     /usr/include/crow
     /usr/local/include/crow
-    ${CMAKE_SOURCE_DIR}/Crow/include
-    ${CMAKE_SOURCE_DIR}/../Crow/include
 )
 
 if(NOT CROW_INCLUDE_DIR)
