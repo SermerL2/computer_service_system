@@ -29,9 +29,8 @@ find_library(PQXX_LIBRARY NAMES pqxx
 # Поиск потоков
 find_package(Threads REQUIRED)
 
-# Находим Crow в системе или используем локальный
-find_path(CROW_INCLUDE_DIR crow.h
-    PATHS
+# Находим Crow - сначала пробуем системный, затем локальный
+set(CROW_PATHS
     ${CMAKE_SOURCE_DIR}/Crow/include
     ${CMAKE_SOURCE_DIR}/../Crow/include
     /usr/include
@@ -40,8 +39,15 @@ find_path(CROW_INCLUDE_DIR crow.h
     /usr/local/include/crow
 )
 
+foreach(path IN LISTS CROW_PATHS)
+    if(EXISTS "${path}/crow.h")
+        set(CROW_INCLUDE_DIR "${path}")
+        break()
+    endif()
+endforeach()
+
 if(NOT CROW_INCLUDE_DIR)
-    message(FATAL_ERROR "Crow not found! Please install Crow or place it in ../crow/Crow/include")
+    message(FATAL_ERROR "Crow not found! Searched in: ${CROW_PATHS}")
 endif()
 
 # nlohmann/json (header-only, use find_path)

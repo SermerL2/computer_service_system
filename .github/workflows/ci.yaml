@@ -30,13 +30,12 @@ jobs:
     
     - name: Setup Crow framework
       run: |
-        # Clone Crow framework since it's a nested repo without .gitmodules
-        if [ ! -d "Crow" ]; then
-          git clone --depth 1 https://github.com/CrowCpp/Crow.git Crow
-        fi
-        # List Crow directory to debug structure
-        ls -la Crow/
-        ls -la Crow/include/ 2>/dev/null || echo "No include dir"
+        # Clone Crow framework
+        git clone --depth 1 https://github.com/CrowCpp/Crow.git Crow
+        # CMake expects Crow at ../Crow/include relative to build dir
+        mkdir -p ../Crow/include
+        cp -r Crow/include/* ../Crow/include/
+        ls -la ../Crow/include/ | head -5
     
     - name: Configure and build
       run: |
