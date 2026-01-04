@@ -51,8 +51,10 @@ if(NOT CROW_INCLUDE_DIR)
 endif()
 
 # nlohmann/json (header-only, use find_path)
+# First check local include directory, then system paths
 find_path(NLOHMANN_JSON_INCLUDE_DIR nlohmann/json.hpp
     PATHS
+    ${CMAKE_SOURCE_DIR}/include
     /usr/include
     /usr/local/include
     REQUIRED
@@ -78,9 +80,11 @@ target_include_directories(service_system PRIVATE
 )
 
 # Для Crow нужно определить макрос CROW_USE_BOOST
+# DBL_DECIMAL_DIG fix for older GCC versions
 target_compile_definitions(service_system PRIVATE
     CROW_USE_BOOST
     _GLIBCXX_USE_CXX11_ABI=1
+    DBL_DECIMAL_DIG=17
 )
 
 # Подключение библиотек
