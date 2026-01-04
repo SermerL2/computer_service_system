@@ -1,5 +1,0 @@
-if(EXISTS "/home/adminstd/gitpr/build_tests/test_simple[1]_tests.cmake")
-  include("/home/adminstd/gitpr/build_tests/test_simple[1]_tests.cmake")
-else()
-  add_test(test_simple_NOT_BUILT test_simple_NOT_BUILT)
-endif()
