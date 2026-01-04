@@ -1,14 +1,21 @@
 #include "webserver.h"
 #include <fstream>
 #include <iostream>
+#include <chrono>
 
 WebServer::WebServer(const std::string& config_file) : port(8080) {
+    // Инициализация логгера
+    Logger::getInstance().init("logs/webserver.log", LogLevel::DEBUG);
+    Logger::getInstance().info("WebServer constructor started", "webserver.cpp");
+    
     // Чтение конфигурации
     std::ifstream config_stream(config_file);
     if (!config_stream) {
-        std::cerr << "Cannot open config file: " << config_file << std::endl;
+        Logger::getInstance().error("Cannot open config file: " + config_file, "webserver.cpp");
         return;
     }
+    
+    Logger::getInstance().info("Config file opened: " + config_file, "webserver.cpp");
     
     try {
         json config;
@@ -22,19 +29,25 @@ WebServer::WebServer(const std::string& config_file) : port(8080) {
             "user=" + config["database"]["user"].get<std::string>() + " " +
             "password=" + config["database"]["password"].get<std::string>();
         
+        Logger::getInstance().info("Connecting to database...", "webserver.cpp");
+        
         db = std::make_unique<Database>(conn_str);
         
         if (!db->connect()) {
-            std::cerr << "Failed to connect to database" << std::endl;
+            Logger::getInstance().error("Failed to connect to database", "webserver.cpp");
             return;
         }
         
+        Logger::getInstance().info("Connected to database successfully", "webserver.cpp");
+        
         port = config["server"]["port"].get<int>();
+        Logger::getInstance().info("Server configured for port: " + std::to_string(port), "webserver.cpp");
         
         setupRoutes();
+        Logger::getInstance().info("Routes configured successfully", "webserver.cpp");
         
     } catch (const std::exception& e) {
-        std::cerr << "Config error: " << e.what() << std::endl;
+        Logger::getInstance().error(std::string("Config error: ") + e.what(), "webserver.cpp");
     }
 }
 
@@ -106,6 +119,97 @@ void WebServer::setupRoutes() {
         json response;
         response["database_connected"] = connected;
         response["timestamp"] = std::time(nullptr);
+        
+        crow::response res;
+        res.set_header("Content-Type", "application/json; charset=utf-8");
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.body = response.dump();
+        return res;
+    });
+    
+    // API: Авторизация пользователя с логированием
+    CROW_ROUTE(app, "/api/login")
+    .methods("POST"_method)
+    ([this](const crow::request& req) {
+        auto start_time = std::chrono::high_resolution_clock::now();
+        std::string client_ip = req.remote_ip_address.empty() ? "unknown" : req.remote_ip_address;
+        
+        try {
+            auto body = json::parse(req.body);
+            std::string username = body["username"].get<std::string>();
+            std::string password = body["password"].get<std::string>();
+            
+            // Логируем попытку авторизации
+            Logger::getInstance().logAuth(username, true, client_ip, "Login attempt started");
+            
+            // Простая проверка логина и пароля (в реальном проекте использовать хеширование)
+            bool auth_success = false;
+            std::string auth_message;
+            
+            if (username == "admin" && password == "admin123") {
+                auth_success = true;
+                auth_message = "Administrator login successful";
+                Logger::getInstance().info("Admin user authenticated successfully", "webserver.cpp");
+            } else if (username == "user" && password == "user123") {
+                auth_success = true;
+                auth_message = "User login successful";
+                Logger::getInstance().info("Regular user authenticated successfully", "webserver.cpp");
+            } else {
+                auth_success = false;
+                auth_message = "Invalid credentials";
+                Logger::getInstance().logAuth(username, false, client_ip, "Invalid username or password");
+            }
+            
+            json response;
+            response["success"] = auth_success;
+            response["message"] = auth_message;
+            response["username"] = username;
+            response["token"] = auth_success ? "mock-jwt-token-" + username : "";
+            
+            auto end_time = std::chrono::high_resolution_clock::now();
+            long duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            
+            Logger::getInstance().logRequest(client_ip, "POST", "/api/login", 
+                                              auth_success ? 200 : 401, duration_ms);
+            
+            crow::response res(auth_success ? 200 : 401);
+            res.set_header("Content-Type", "application/json; charset=utf-8");
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.body = response.dump();
+            return res;
+            
+        } catch (const std::exception& e) {
+            auto end_time = std::chrono::high_resolution_clock::now();
+            long duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            
+            Logger::getInstance().logRequest(client_ip, "POST", "/api/login", 400, duration_ms);
+            Logger::getInstance().error(std::string("Login error: ") + e.what(), "webserver.cpp");
+            
+            json response;
+            response["success"] = false;
+            response["error"] = e.what();
+            
+            crow::response res(400);
+            res.set_header("Content-Type", "application/json; charset=utf-8");
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.body = response.dump();
+            return res;
+        }
+    });
+    
+    // API: Выход пользователя с логированием
+    CROW_ROUTE(app, "/api/logout")
+    .methods("POST"_method)
+    ([this](const crow::request& req) {
+        std::string client_ip = req.remote_ip_address.empty() ? "unknown" : req.remote_ip_address;
+        
+        // Логируем выход пользователя
+        Logger::getInstance().info("User logout successful", "webserver.cpp");
+        Logger::getInstance().logRequest(client_ip, "POST", "/api/logout", 200, 1);
+        
+        json response;
+        response["success"] = true;
+        response["message"] = "Logged out successfully";
         
         crow::response res;
         res.set_header("Content-Type", "application/json; charset=utf-8");

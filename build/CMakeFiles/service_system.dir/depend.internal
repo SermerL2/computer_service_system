@@ -6,9 +6,11 @@ CMakeFiles/service_system.dir/src/database.cpp.o
  /home/adminstd/gitpr/src/database.h
 CMakeFiles/service_system.dir/src/main.cpp.o
  /home/adminstd/gitpr/src/database.h
+ /home/adminstd/gitpr/src/logger.h
  /home/adminstd/gitpr/src/main.cpp
  /home/adminstd/gitpr/src/webserver.h
 CMakeFiles/service_system.dir/src/webserver.cpp.o
  /home/adminstd/gitpr/src/database.h
+ /home/adminstd/gitpr/src/logger.h
  /home/adminstd/gitpr/src/webserver.cpp
  /home/adminstd/gitpr/src/webserver.h

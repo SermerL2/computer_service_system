@@ -5,10 +5,12 @@ CMakeFiles/service_system.dir/src/database.cpp.o: ../src/database.cpp
 CMakeFiles/service_system.dir/src/database.cpp.o: ../src/database.h
 
 CMakeFiles/service_system.dir/src/main.cpp.o: ../src/database.h
+CMakeFiles/service_system.dir/src/main.cpp.o: ../src/logger.h
 CMakeFiles/service_system.dir/src/main.cpp.o: ../src/main.cpp
 CMakeFiles/service_system.dir/src/main.cpp.o: ../src/webserver.h
 
 CMakeFiles/service_system.dir/src/webserver.cpp.o: ../src/database.h
+CMakeFiles/service_system.dir/src/webserver.cpp.o: ../src/logger.h
 CMakeFiles/service_system.dir/src/webserver.cpp.o: ../src/webserver.cpp
 CMakeFiles/service_system.dir/src/webserver.cpp.o: ../src/webserver.h
 

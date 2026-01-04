@@ -6,12 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/adminstd/gitpr/src/database.cpp
-database.h
-/home/adminstd/gitpr/src/database.h
-iostream
--
-
 /home/adminstd/gitpr/src/database.h
 pqxx/pqxx
 -
@@ -22,6 +16,26 @@ vector
 memory
 -
 nlohmann/json.hpp
+-
+
+/home/adminstd/gitpr/src/logger.h
+string
+-
+chrono
+-
+fstream
+-
+mutex
+-
+sstream
+-
+iomanip
+-
+ctime
+-
+memory
+-
+iostream
 -
 
 /home/adminstd/gitpr/src/main.cpp
@@ -37,10 +51,14 @@ fstream
 -
 iostream
 -
+chrono
+-
 
 /home/adminstd/gitpr/src/webserver.h
 database.h
 /home/adminstd/gitpr/src/database.h
+logger.h
+/home/adminstd/gitpr/src/logger.h
 crow.h
 -
 cfloat
