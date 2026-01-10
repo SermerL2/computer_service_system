@@ -1,0 +1,112 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /var/lib/promtail/positions.yaml
+
+clients:
+  - url: http://localhost:3100/loki/api/v1/push
+
+scrape_configs:
+  # Мониторинг логов веб-сервера
+  - job_name: service_system_logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: service_system
+          app: service_system
+          __path__: /home/adminstd/gitpr/logs/webserver.log
+    pipeline_stages:
+      - regex:
+          expression: '\[(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)\] \[(?P<level>\w+)\] (?P<message>.*)'
+      - labels:
+          level:
+          timestamp:
+
+  # Мониторинг HTTP запросов из логов
+  - job_name: http_requests
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: http_requests
+          app: service_system
+          __path__: /home/adminstd/gitpr/logs/webserver.log
+    pipeline_stages:
+      - regex:
+          expression: 'HTTP Request: (?P<method>\w+) (?P<path>[^|]+) \| IP: (?P<ip>[^|]+) \| Status: (?P<status>\d+) \| Duration: (?P<duration>\d+)ms'
+      - labels:
+          method:
+          path:
+          ip:
+          status:
+
+  # Мониторинг авторизации
+  - job_name: auth_events
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: auth_events
+          app: service_system
+          __path__: /home/adminstd/gitpr/logs/webserver.log
+    pipeline_stages:
+      - regex:
+          expression: 'Auth attempt: user=.(?P<user>[^''"]+). success=(?P<success>true|false) ip=(?P<ip>[^\s]+)'
+      - labels:
+          user:
+          success:
+          ip:
+
+  # Мониторинг операций с БД
+  - job_name: database_operations
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: database_operations
+          app: service_system
+          __path__: /home/adminstd/gitpr/logs/webserver.log
+    pipeline_stages:
+      - regex:
+          expression: 'DB operation: (?P<operation>[^|]+) \| success=(?P<success>true|false)'
+      - labels:
+          operation:
+          success:
+
+  # Мониторинг устройств
+  - job_name: device_operations
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: device_operations
+          app: service_system
+          __path__: /home/adminstd/gitpr/logs/webserver.log
+    pipeline_stages:
+      - regex:
+          expression: 'Device operation: (?P<operation>[^|]+) \| device_id=(?P<device_id>\d+) \| success=(?P<success>true|false)'
+      - labels:
+          operation:
+          device_id:
+          success:
+
+  # Мониторинг обслуживания
+  - job_name: service_operations
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: service_operations
+          app: service_system
+          __path__: /home/adminstd/gitpr/logs/webserver.log
+    pipeline_stages:
+      - regex:
+          expression: 'Service operation: (?P<operation>[^|]+) \| record_id=(?P<record_id>\d+) \| success=(?P<success>true|false)'
+      - labels:
+          operation:
+          record_id:
+          success:
+

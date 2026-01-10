@@ -1,0 +1,47 @@
+# Исключаем ненужные файлы из контекста сборки Docker
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+*.swp
+*.swo
+
+# Сборочные артефакты
+build/
+build_tests/
+*.o
+*.a
+*.so
+*.exe
+
+# Тесты
+tests/
+reports/
+*.log
+
+# Документация
+*.md
+README*
+
+# Временные файлы
+*~
+*.tmp
+temp/
+
+# Docker файлы в папке docker (они копируются отдельно)
+docker/Dockerfile
+docker-compose*.yml
+
+# Изображения и медиа
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+
+# Логи
+logs/
+
