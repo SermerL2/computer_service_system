@@ -1,0 +1,1 @@
+ -I/usr/include/postgresql -std=c++17 -fvisibility=hidden -fvisibility-inlines-hidden

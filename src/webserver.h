@@ -1,6 +1,9 @@
 #pragma once
 #include "database.h"
+#include "logger.h"
+#include "metrics.h"
 #include <crow.h>
+#include <cfloat>
 #include <string>
 #include <memory>
 

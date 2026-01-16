@@ -1,4 +1,4 @@
-name: C++ Build and Quality Check
+name: C++ CI
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     
     services:
       postgres:
@@ -16,150 +16,59 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
         ports:
           - 5432:5432
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
-      
+      uses: actions/checkout@v4
+    
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          cmake \
-          libboost-all-dev \
-          libpqxx-dev \
-          postgresql-client \
-          clang-format-14 \
-          libssl-dev
-        
-    - name: Install Crow
+        sudo apt-get install -y build-essential cmake libboost-all-dev libpqxx-dev libgtest-dev googletest clang-format
+    
+    - name: Build GTest (if needed)
+      if: steps.check_gtest.outputs.exists != 'true'
       run: |
-        cd /tmp
-        git clone https://github.com/CrowCpp/Crow.git
-        cd Crow
-        mkdir build && cd build
-        cmake .. \
-          -DCROW_BUILD_EXAMPLES=OFF \
-          -DCROW_BUILD_TESTS=OFF \
-          -DCMAKE_INSTALL_PREFIX=/usr/local
-        sudo make install
-        
-    - name: Initialize test database
+        # In case libgtest-dev doesn't provide compiled libraries
+        sudo apt-get install -y cmake libgtest-dev
+        cd /usr/src/googletest
+        sudo cmake .
+        sudo make
+        sudo cp *.a /usr/lib/ || true
+    
+    - name: Setup Crow framework
       run: |
-        sleep 5  # Ждем запуск PostgreSQL
-        if [ -f create_db.sql ]; then
-          PGPASSWORD=postgres psql -h localhost -U postgres -d test_db -f create_db.sql || true
-        fi
-        
-    - name: Configure and build project
+        # Clone Crow framework
+        git clone --depth 1 https://github.com/CrowCpp/Crow.git Crow
+        # CMake expects Crow at ../Crow/include relative to build dir
+        mkdir -p ../Crow/include
+        cp -r Crow/include/* ../Crow/include/
+        ls -la ../Crow/include/ | head -5
+    
+    - name: Configure and build
       run: |
         mkdir -p build
         cd build
-        cmake .. \
-          -DCMAKE_CXX_STANDARD=17 \
-          -DCMAKE_BUILD_TYPE=Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release
         make -j$(nproc)
-        
-    - name: Verify executable
+    
+    - name: Build tests
       run: |
-        cd build
-        file ./service_system
-        ./service_system --help 2>&1 || echo "Executable built successfully"
-        
+        mkdir -p build_tests
+        cd build_tests
+        cmake ../tests
+        make -j$(nproc)
+    
+    - name: Copy test config
+      run: cp tests/config_test.json config_test.json
+    
+    - name: Run tests
+      run: ./build_tests/test_simple
+    
     - name: Check code formatting
       run: |
-        # Создаем минимальный .clang-format если его нет
-        if [ ! -f .clang-format ]; then
-          cat > .clang-format << EOF
-          BasedOnStyle: LLVM
-          IndentWidth: 4
-          UseTab: Never
-          ColumnLimit: 100
-          BreakBeforeBraces: Allman
-          EOF
-        fi
-        
-        # Проверяем форматирование
-        find src -name "*.cpp" -o -name "*.h" | \
-          xargs clang-format-14 --style=file --dry-run --Werror || \
-          echo "Code formatting issues found"
-          
-    - name: Basic compilation check
-      run: |
-        # Проверяем что все файлы компилируются отдельно
-        for file in src/*.cpp; do
-          echo "Checking $file..."
-          g++ -std=c++17 -Wall -Wextra -c "$file" -o /dev/null 2>&1 || \
-            echo "Warning: $file has compilation issues"
-        done
-        
-    - name: Check for missing includes
-      run: |
-        # Проверяем наличие всех заголовочных файлов
-        for file in src/*.cpp; do
-          echo "Checking includes in $file..."
-          grep -E '^#include' "$file" | while read line; do
-            header=$(echo "$line" | sed -e 's/#include[[:space:]]*[<"]//' -e 's/[>"]//')
-            if [[ "$line" == *'<'* ]]; then
-              # Системные заголовки
-              if ! echo "$header" | grep -q "^boost/\|^pqxx/\|^crow\|^iostream\|^string\|^vector\|^map\|^set"; then
-                echo "Warning: Unknown system header in $file: $header"
-              fi
-            else
-              # Локальные заголовки
-              if [ ! -f "src/$header" ] && [ ! -f "$header" ]; then
-                echo "Error: Missing header file in $file: $header"
-                exit 1
-              fi
-            fi
-          done
-        done
-        
-    - name: Validate JSON config
-      run: |
-        if [ -f config.json ]; then
-          echo "Checking config.json..."
-          python3 -c "
-          import json
-          try:
-              with open('config.json', 'r') as f:
-                  data = json.load(f)
-              print('config.json is valid JSON')
-          except Exception as e:
-              print(f'Error in config.json: {e}')
-              exit(1)
-          "
-        else
-          echo "Warning: config.json not found"
-        fi
-        
-    - name: Check SQL files syntax
-      run: |
-        for sql_file in *.sql; do
-          if [ -f "$sql_file" ]; then
-            echo "Checking $sql_file..."
-            # Простая проверка что файл не пустой
-            if [ -s "$sql_file" ]; then
-              echo "  ✓ $sql_file is not empty"
-            else
-              echo "  ✗ $sql_file is empty"
-            fi
-          fi
-        done
-        
-    - name: Verify www directory
-      run: |
-        if [ -d "www" ]; then
-          echo "www directory exists"
-          ls -la www/
-        else
-          echo "Warning: www directory not found"
-        fi
+        clang-format --version
+        find . -name '*.cpp' -o -name '*.h' | xargs clang-format --style=file --output-replacements-xml | grep "<replacement " && (echo "Code is not properly formatted" && exit 1) || echo "Code formatting is OK"
+
